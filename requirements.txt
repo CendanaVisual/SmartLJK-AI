@@ -1,6 +1,6 @@
 # SmartLJK AI - Backend Dependencies
 fastapi==0.104.1
-uvicorn[standard]==0.24.0
+uvicorn==0.24.0
 python-multipart==0.0.6
 asyncpg==0.29.0
 numpy==1.26.2
