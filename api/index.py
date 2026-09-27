@@ -314,6 +314,28 @@ async def scan_image(
         # Proses OMR jika modul tersedia
         if omr_processor:
             scan_result = omr_processor.process_ljk_image(image_bytes, questions_config)
+            # Evaluasi tulisan tangan untuk isian singkat dengan AI Gemini Vision
+            if ai_grader and scan_result.get('short_answers'):
+                for q in questions:
+                    q_num = q.get('question_number')
+                    crop_bytes = scan_result['short_answers'].get(q_num) or scan_result['short_answers'].get(str(q_num))
+                    if crop_bytes:
+                        ans_key = q.get('answer_key', '')
+                        weight = float(q.get('weight', 1.0))
+                        try:
+                            ai_res = ai_grader.grade_short_answer(crop_bytes, ans_key, max_score=weight)
+                            if isinstance(ai_res, dict) and not ai_res.get('error'):
+                                scan_result['answers'][str(q_num)] = {
+                                    'answer': ai_res.get('transcribed_text', ''),
+                                    'confidence': float(ai_res.get('confidence_percentage', 90.0)),
+                                    'transcribed_text': ai_res.get('transcribed_text', ''),
+                                    'is_correct': bool(ai_res.get('is_correct', False)),
+                                    'score_earned': float(ai_res.get('score_earned', 0.0)),
+                                    'ai_feedback': ai_res.get('explanation', ''),
+                                    'is_ai_graded': True
+                                }
+                        except Exception as ai_err:
+                            print(f"AI short answer grading error Q{q_num}: {ai_err}")
         else:
             # Simulasi hasil scan untuk demo
             scan_result = _simulate_scan_result(questions)
@@ -776,8 +798,8 @@ def _grade_all_answers(scan_result, questions):
             if ai_data.get('is_ai_graded'):
                 ans_text = str(ai_data.get('transcribed_text', ''))
                 key_text = str(answer_key) if answer_key else ''
-                is_correct = ans_text.strip().lower() == key_text.strip().lower()
-                score_earned = weight if is_correct else 0
+                is_correct = ai_data.get('is_correct', ans_text.strip().lower() == key_text.strip().lower())
+                score_earned = float(ai_data.get('score_earned', weight if is_correct else 0))
                 ai_feedback = ai_data.get('ai_feedback', '')
                 ai_confidence = ai_data.get('confidence', 0)
             else:
