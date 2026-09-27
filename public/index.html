@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartLJK AI</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i> SmartLJK AI
+            </div>
+            <button class="hamburger-menu" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav class="nav-links" id="navLinks">
+                <a href="#beranda" class="nav-item active" data-target="beranda">Beranda</a>
+                <a href="#scan" class="nav-item" data-target="scan">Scan LJK</a>
+                <a href="#dashboard" class="nav-item" data-target="dashboard">Dashboard Guru</a>
+                <a href="#generator" class="nav-item" data-target="generator">Generator Soal</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        
+        <!-- PAGE 1: BERANDA (LJK Builder) -->
+        <section id="beranda" class="page-section active">
+            <div class="split-layout">
+                <!-- Left Column -->
+                <div class="left-col">
+                    <div class="card mb-4">
+                        <h2 class="card-title">Identitas Ujian</h2>
+                        <form id="examForm">
+                            <div class="input-group">
+                                <label for="judulUjian">Judul Ujian</label>
+                                <input type="text" id="judulUjian" placeholder="Contoh: Ujian Tengah Semester" required>
+                            </div>
+                            <div class="grid-2">
+                                <div class="input-group">
+                                    <label for="kodeUjian">Kode Ujian</label>
+                                    <input type="text" id="kodeUjian" placeholder="Contoh: UTS-IPA-01" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="mataPelajaran">Mata Pelajaran</label>
+                                    <input type="text" id="mataPelajaran" placeholder="Contoh: Biologi" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="kelas">Kelas</label>
+                                    <input type="text" id="kelas" placeholder="Contoh: 10 IPA" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="tahunAkademik">Tahun Akademik</label>
+                                    <input type="text" id="tahunAkademik" placeholder="Contoh: 2023/2024" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="kkm">KKM</label>
+                                    <input type="number" id="kkm" placeholder="75" value="75" required>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="d-flex justify-between align-center mb-3">
+                            <h2 class="card-title mb-0">Daftar Butir Soal</h2>
+                            <div class="dropdown">
+                                <button class="btn btn-primary" id="addQuestionBtn">+ Tambah Soal</button>
+                                <div class="dropdown-content" id="addQuestionDropdown">
+                                    <a href="#" data-type="Pilihan Ganda">Pilihan Ganda</a>
+                                    <a href="#" data-type="Pilihan Ganda Kompleks">Pilihan Ganda Kompleks</a>
+                                    <a href="#" data-type="Benar/Salah">Benar/Salah</a>
+                                    <a href="#" data-type="Menjodohkan">Menjodohkan</a>
+                                    <a href="#" data-type="Isian Singkat">Isian Singkat</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="questionsContainer">
+                            <!-- Question rows injected here -->
+                        </div>
+                        <button class="btn btn-primary w-100 mt-4" id="saveExamBtn">Simpan Ujian ke Database</button>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-col">
+                    <div class="card sticky-top">
+                        <h2 class="card-title">Pratinjau LJK A4</h2>
+                        <div class="ljk-preview-container">
+                            <div class="ljk-preview" id="ljkPreview">
+                                <div class="anchor-marker top-left"></div>
+                                <div class="anchor-marker top-right"></div>
+                                <div class="anchor-marker bottom-left"></div>
+                                <div class="anchor-marker bottom-right"></div>
+                                
+                                <div class="ljk-header">
+                                    <div class="ljk-title">
+                                        <h1 id="previewJudul">Judul Ujian</h1>
+                                        <p id="previewDetail">Mata Pelajaran - Kelas</p>
+                                    </div>
+                                    <div class="ljk-qr" id="previewQr"></div>
+                                </div>
+                                
+                                <div class="ljk-student-info">
+                                    <div class="ljk-box">Nama: _______________________</div>
+                                    <div class="ljk-box">NIS:  _______________________</div>
+                                </div>
+                                
+                                <div class="ljk-answers" id="previewAnswers">
+                                    <!-- Answers preview injected here -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid-2">
+                            <button class="btn btn-secondary" id="printBtn"><i class="fas fa-print"></i> Cetak / PDF (A4)</button>
+                            <button class="btn btn-primary" id="downloadPdfBtn"><i class="fas fa-file-pdf"></i> Unduh PDF</button>
+                        </div>
+                        <button class="btn btn-ghost w-100 mt-2" id="testScanBtn">Uji Scan Lembar Contoh (1-Klik)</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 2: SCAN LJK -->
+        <section id="scan" class="page-section hidden">
+            <div class="split-layout">
+                <div class="left-col">
+                    <div class="card mb-4">
+                        <h2 class="card-title">Pengaturan Scan</h2>
+                        <div class="input-group">
+                            <label for="scanExamSelect">Pilih Ujian</label>
+                            <select id="scanExamSelect">
+                                <option value="">-- Pilih Ujian --</option>
+                            </select>
+                        </div>
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label for="scanStudentName">Nama Siswa</label>
+                                <input type="text" id="scanStudentName" placeholder="Opsional (Otomatis dari LJK)">
+                            </div>
+                            <div class="input-group">
+                                <label for="scanStudentNis">NIS</label>
+                                <input type="text" id="scanStudentNis" placeholder="Opsional (Otomatis dari LJK)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="tab-nav">
+                            <button class="tab-btn active" data-tab="upload">Unggah File</button>
+                            <button class="tab-btn" data-tab="camera">Kamera Langsung</button>
+                            <button class="tab-btn" data-tab="pdf">Scan PDF (1 Kelas)</button>
+                        </div>
+                        
+                        <div class="tab-content">
+                            <!-- Upload Tab -->
+                            <div id="tab-upload" class="tab-pane active">
+                                <div class="dropzone" id="scanDropzone">
+                                    <i class="fas fa-cloud-upload-alt fa-3x mb-2 text-secondary"></i>
+                                    <p>Seret & Lepas foto LJK di sini, atau klik untuk memilih</p>
+                                    <input type="file" id="scanFileInput" accept="image/jpeg, image/png" hidden>
+                                </div>
+                                <div id="scanImagePreview" class="hidden mt-3 text-center">
+                                    <img src="" alt="Preview" class="img-preview">
+                                </div>
+                            </div>
+                            
+                            <!-- Camera Tab -->
+                            <div id="tab-camera" class="tab-pane hidden">
+                                <div class="camera-container">
+                                    <video id="cameraVideo" autoplay playsinline></video>
+                                    <div class="camera-guide guide-tl"></div>
+                                    <div class="camera-guide guide-tr"></div>
+                                    <div class="camera-guide guide-bl"></div>
+                                    <div class="camera-guide guide-br"></div>
+                                </div>
+                                <div class="d-flex justify-center gap-2 mt-3">
+                                    <button class="btn btn-secondary" id="switchCameraBtn"><i class="fas fa-sync"></i> Balik</button>
+                                    <button class="btn btn-primary" id="captureBtn"><i class="fas fa-camera"></i> Ambil Foto</button>
+                                </div>
+                                <canvas id="cameraCanvas" hidden></canvas>
+                            </div>
+                            
+                            <!-- PDF Tab -->
+                            <div id="tab-pdf" class="tab-pane hidden">
+                                <div class="input-group">
+                                    <label>Unggah File PDF (Berisi LJK 1 Kelas)</label>
+                                    <input type="file" id="pdfFileInput" accept=".pdf">
+                                </div>
+                                <div id="pdfQueueContainer" class="hidden">
+                                    <h4 class="mb-2" id="pdfQueueInfo">Lembar 1 s.d. 0</h4>
+                                    <div class="pdf-queue-list" id="pdfQueueList"></div>
+                                    <div class="d-flex justify-between mt-3">
+                                        <button class="btn btn-ghost" id="pdfPrevBtn" disabled>&laquo; Seb.</button>
+                                        <button class="btn btn-ghost" id="pdfNextBtn" disabled>Sel. &raquo;</button>
+                                    </div>
+                                    <button class="btn btn-primary w-100 mt-3" id="processAllPdfBtn">Proses Semua</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary w-100 mt-4 btn-large" id="processScanBtn">Proses Scan</button>
+                    </div>
+                </div>
+                
+                <div class="right-col">
+                    <div class="card hidden" id="scanResultsArea">
+                        <h2 class="card-title">Hasil Pemeriksaan</h2>
+                        
+                        <div class="student-info-card mb-4" id="resultStudentInfo">
+                            <h3 id="resName">Nama Siswa</h3>
+                            <p>NIS: <span id="resNis">-</span> | Kelas: <span id="resClass">-</span></p>
+                        </div>
+                        
+                        <div class="score-card mb-4">
+                            <div class="score-display">
+                                <span class="score-value" id="resScore">0.00</span>
+                                <span class="score-max">/ 100</span>
+                            </div>
+                            <div class="score-stats mt-2">
+                                <p>Total Skor: <strong id="resTotal">0 / 0</strong></p>
+                                <p>Akurasi OMR: <strong id="resAccuracy">0%</strong></p>
+                                <div id="resStatus" class="badge badge-success mt-2">LULUS</div>
+                            </div>
+                        </div>
+                        
+                        <h3 class="mb-2">Rincian Jawaban</h3>
+                        <div class="table-responsive">
+                            <table class="table" id="resTable">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Tipe</th>
+                                        <th>Jawaban</th>
+                                        <th>Kunci</th>
+                                        <th>Status</th>
+                                        <th>Skor</th>
+                                        <th>AI Feedback</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Results injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card flex-center empty-state" id="scanEmptyState">
+                        <div class="text-center text-secondary">
+                            <i class="fas fa-file-scan fa-4x mb-3"></i>
+                            <p>Pilih atau ambil gambar LJK untuk diproses</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 3: DASHBOARD GURU -->
+        <section id="dashboard" class="page-section hidden">
+            <div class="card mb-4">
+                <div class="d-flex justify-between align-center">
+                    <div class="input-group mb-0" style="width: 300px;">
+                        <select id="dashExamSelect">
+                            <option value="">-- Pilih Ujian --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary" id="exportExcelBtn"><i class="fas fa-file-excel"></i> Ekspor Laporan Excel (.xlsx)</button>
+                </div>
+            </div>
+            
+            <div class="grid-4 mb-4">
+                <div class="card stat-card">
+                    <div class="stat-icon bg-blue"><i class="fas fa-users"></i></div>
+                    <div class="stat-content">
+                        <p class="stat-label">Jumlah Peserta</p>
+                        <h3 class="stat-value" id="statPeserta">0</h3>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon bg-green"><i class="fas fa-chart-bar"></i></div>
+                    <div class="stat-content">
+                        <p class="stat-label">Rata-rata Kelas</p>
+                        <h3 class="stat-value" id="statRata">0.00</h3>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon bg-yellow"><i class="fas fa-arrows-alt-v"></i></div>
+                    <div class="stat-content">
+                        <p class="stat-label">Nilai Tertinggi / Terendah</p>
+                        <h3 class="stat-value" id="statMinMax">0 / 0</h3>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon bg-red"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-content">
+                        <p class="stat-label">Tingkat Kelulusan</p>
+                        <h3 class="stat-value" id="statLulus">0%</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Daftar Hasil Siswa</h2>
+                <div class="table-responsive">
+                    <table class="table" id="dashTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-sort="rank">Peringkat <i class="fas fa-sort"></i></th>
+                                <th class="sortable" data-sort="nis">NIS <i class="fas fa-sort"></i></th>
+                                <th class="sortable" data-sort="name">Nama Siswa <i class="fas fa-sort"></i></th>
+                                <th class="sortable" data-sort="score">Nilai Akhir <i class="fas fa-sort"></i></th>
+                                <th class="sortable" data-sort="accuracy">Akurasi OMR <i class="fas fa-sort"></i></th>
+                                <th class="sortable" data-sort="status">Status <i class="fas fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Student rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 4: GENERATOR SOAL -->
+        <section id="generator" class="page-section hidden">
+            <div class="split-layout">
+                <div class="left-col">
+                    <div class="card">
+                        <h2 class="card-title">Pengaturan Generator (AI)</h2>
+                        
+                        <div class="input-group">
+                            <label for="genTopik">Topik / Mata Pelajaran</label>
+                            <input type="text" id="genTopik" placeholder="Contoh: Biologi - Fotosintesis">
+                            <div class="preset-buttons mt-2">
+                                <button class="btn btn-ghost btn-sm preset-btn">Biologi - Fotosintesis</button>
+                                <button class="btn btn-ghost btn-sm preset-btn">Fisika - Hukum Newton</button>
+                                <button class="btn btn-ghost btn-sm preset-btn">Matematika - Pythagoras</button>
+                                <button class="btn btn-ghost btn-sm preset-btn">B. Indonesia - Teks Prosedur</button>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="genKelas">Target Kelas</label>
+                            <select id="genKelas">
+                                <option value="SD Kelas 4-6">SD Kelas 4-6</option>
+                                <option value="SMP Kelas 7-9">SMP Kelas 7-9</option>
+                                <option value="SMA Kelas 10-12">SMA Kelas 10-12</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>Tingkat Kesulitan (Taksonomi Bloom)</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" value="C1" class="gen-bloom"> C1 - Mengingat</label>
+                                <label><input type="checkbox" value="C2" class="gen-bloom"> C2 - Memahami</label>
+                                <label><input type="checkbox" value="C3" class="gen-bloom"> C3 - Mengaplikasikan</label>
+                                <label><input type="checkbox" value="C4" class="gen-bloom"> C4 - Menganalisis</label>
+                                <label><input type="checkbox" value="C5" class="gen-bloom"> C5 - Mengevaluasi</label>
+                                <label><input type="checkbox" value="C6" class="gen-bloom"> C6 - Mencipta</label>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="genJumlah">Jumlah Soal</label>
+                            <input type="number" id="genJumlah" min="1" max="20" value="5">
+                        </div>
+                        
+                        <button class="btn btn-primary w-100" id="generateBtn">
+                            <span id="genBtnText"><i class="fas fa-magic"></i> Generate Soal</span>
+                            <div class="spinner hidden" id="genSpinner"></div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="right-col">
+                    <div class="card h-100 d-flex flex-col">
+                        <div class="d-flex justify-between align-center mb-3">
+                            <h2 class="card-title mb-0">Hasil Generate</h2>
+                            <div class="tab-nav mb-0">
+                                <button class="tab-btn active" data-tab="gen-siswa">Lembar Siswa</button>
+                                <button class="tab-btn" data-tab="gen-guru">Pegangan Guru</button>
+                            </div>
+                        </div>
+                        
+                        <div class="gen-output-container flex-grow">
+                            <textarea id="genOutput" class="w-100 h-100" readonly placeholder="Hasil generate soal akan muncul di sini..."></textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-secondary flex-1" id="genCopyBtn"><i class="fas fa-copy"></i> Salin</button>
+                            <button class="btn btn-secondary flex-1" id="genDownloadBtn"><i class="fas fa-download"></i> Unduh TXT</button>
+                            <button class="btn btn-primary flex-2" id="genImportBtn"><i class="fas fa-file-import"></i> Impor ke LJK Beranda</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>SmartLJK AI &copy; 2024 - Powered by OpenCV, Gemini AI & Neon PostgreSQL</p>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Student Detail Modal -->
+    <div id="studentDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="mb-3">Detail Hasil Pemeriksaan</h2>
+            <div id="modalContentBody">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
