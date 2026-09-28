@@ -3,176 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartLJK AI - Profesional</title>
-    <!-- Font -->
+    <title>SmartLJK AI - Pembuat & Pemeriksa LJK Otomatis</title>
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <!-- Navigation -->
+    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo">
                 <i class="fas fa-layer-group"></i> SmartLJK AI
             </div>
-            <div class="nav-links">
-                <a href="#beranda" class="nav-item active" id="nav-beranda">Beranda</a>
-                <a href="#scan" class="nav-item" id="nav-scan">Scan LJK</a>
-                <a href="#dashboard" class="nav-item" id="nav-dashboard">Dashboard Guru</a>
-                <a href="#generator" class="nav-item" id="nav-generator">Generator Soal</a>
+            <div class="nav-links" id="navLinks">
+                <a href="#beranda" class="nav-item active" id="nav-beranda"><i class="fas fa-edit"></i> Beranda</a>
+                <a href="#scan" class="nav-item" id="nav-scan"><i class="fas fa-camera"></i> Scan LJK</a>
+                <a href="#dashboard" class="nav-item" id="nav-dashboard"><i class="fas fa-chart-bar"></i> Dashboard Guru</a>
+                <a href="#generator" class="nav-item" id="nav-generator"><i class="fas fa-robot"></i> Generator Soal</a>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content Area -->
+    <!-- Main Container -->
     <main class="container">
 
-        <!-- PAGE 1: BERANDA (LJK Builder) -->
+        <!-- ============================================================
+             PAGE 1: BERANDA (LJK Builder & Realtime Preview Kertas F4)
+             ============================================================ -->
         <section id="beranda" class="page-section">
             <div class="split-layout">
-                <!-- Editor Col -->
+                <!-- Left Column: Form & Editor Soal -->
                 <div class="left-col">
+                    <!-- Top Action Card -->
                     <div class="card d-flex justify-between align-center">
-                        <div class="card-title mb-0">
-                            <i class="fas fa-layer-group text-primary"></i> Konfigurasi & Editor Soal LJK
-                        </div>
-                        <div class="text-secondary" style="font-size: 0.85rem;" id="ljkSummaryText">
-                            Total 0 Butir Soal • Skor Maksimal: 0 Poin
+                        <div>
+                            <h2 class="card-title mb-0"><i class="fas fa-sliders-h text-primary"></i> Konfigurasi & Editor Soal LJK</h2>
+                            <div class="text-secondary" style="font-size: 0.85rem;" id="ljkSummaryText">
+                                Total <span id="totalQuestionsCount">0</span> Butir Soal • Skor Maksimal: <span id="totalScoreWeight">0</span> Poin
+                            </div>
                         </div>
                         <button class="btn btn-primary" id="saveExamBtn"><i class="fas fa-save"></i> Simpan Ujian</button>
                     </div>
 
-                    <!-- Kop Surat -->
+                    <!-- KOP Surat Instansi -->
                     <div class="card">
                         <div class="card-title text-primary"><i class="far fa-image"></i> KOP SURAT LJK (PNG / JPG / JPEG)</div>
                         <div class="dropzone mb-3" id="kopDropzone">
-                            <i class="fas fa-upload dropzone-icon"></i>
+                            <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
                             <div class="dropzone-text">Tarik berkas foto Kop Surat ke sini, atau klik tombol di bawah</div>
-                            <div style="font-size: 0.75rem; color: #94A3B8; margin-bottom: 1rem;">Format gambar: PNG, JPG, JPEG (Resolusi tajam untuk cetak A4)</div>
+                            <div style="font-size: 0.75rem; color: #94A3B8; margin-bottom: 0.8rem;">Format gambar: PNG, JPG, JPEG (Resolusi tajam untuk cetak F4)</div>
                             <input type="file" id="kopFile" hidden accept="image/*">
-                            <button class="btn btn-secondary" onclick="document.getElementById('kopFile').click()"><i class="far fa-image"></i> Pilih Berkas Kop Surat</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('kopFile').click()"><i class="far fa-image"></i> Pilih Berkas Kop Surat</button>
                         </div>
                         <div class="input-group mb-0">
-                            <label><i class="fas fa-building"></i> Nama Sekolah / Instansi Penyelenggara</label>
-                            <input type="text" id="examInstansi" placeholder="cth: DINAS PENDIDIKAN - SMP NEGERI 7 PEDUNGAN" value="DINAS PENDIDIKAN DAN KEBUDAYAAN">
+                            <label><i class="fas fa-university"></i> Nama Sekolah / Instansi Penyelenggara</label>
+                            <input type="text" id="instansi" placeholder="cth: DINAS PENDIDIKAN DAN KEBUDAYAAN" value="DINAS PENDIDIKAN DAN KEBUDAYAAN">
                         </div>
                     </div>
 
-                    <!-- Identitas Ujian -->
-                    <div class="card">
+                    <!-- Identitas Ujian & Metadata -->
+                    <div class="card" id="examForm">
                         <div class="card-title text-primary"><i class="far fa-file-alt"></i> IDENTITAS UJIAN & METADATA</div>
                         <div class="grid-2">
                             <div class="input-group">
-                                <label>Judul Ujian</label>
-                                <input type="text" id="examTitle" placeholder="Contoh: Penilaian Akhir Semester - IPA Biologi">
+                                <label for="judulUjian">Judul Ujian *</label>
+                                <input type="text" id="judulUjian" placeholder="Contoh: Penilaian Akhir Semester - IPA Biologi" value="Penilaian Akhir Semester - IPA Biologi">
                             </div>
                             <div class="input-group">
-                                <label>Kode Ujian (QR Metadata)</label>
-                                <input type="text" id="examCode" placeholder="Contoh: BIO-SMP8-2025">
+                                <label for="kodeUjian">Kode Ujian (QR Metadata) *</label>
+                                <input type="text" id="kodeUjian" placeholder="Contoh: BIO-SMP8-2025" value="BIO-SMP8-2025">
                             </div>
                         </div>
                         <div class="grid-3">
                             <div class="input-group">
-                                <label>Mata Pelajaran</label>
-                                <input type="text" id="examSubject" placeholder="Contoh: Ilmu Pengetahuan Alam (IPA)">
+                                <label for="mataPelajaran">Mata Pelajaran</label>
+                                <input type="text" id="mataPelajaran" placeholder="Contoh: Ilmu Pengetahuan Alam (IPA)" value="Ilmu Pengetahuan Alam (IPA)">
                             </div>
                             <div class="input-group">
-                                <label>Kelas / Semester</label>
-                                <input type="text" id="examClass" placeholder="Contoh: Kelas 8A">
+                                <label for="kelas">Kelas / Semester</label>
+                                <input type="text" id="kelas" placeholder="Contoh: Kelas 8A" value="Kelas 8A">
                             </div>
                             <div class="input-group">
-                                <label>Batas KKM</label>
-                                <input type="number" id="examKKM" value="75.00" step="0.1">
+                                <label for="kkm">Batas KKM</label>
+                                <input type="number" id="kkm" value="75.00" step="0.5">
                             </div>
+                        </div>
+                        <div class="input-group mb-0">
+                            <label for="tahunAkademik">Tahun Ajaran</label>
+                            <input type="text" id="tahunAkademik" placeholder="Contoh: 2024/2025" value="2024/2025">
                         </div>
                     </div>
 
-                    <!-- Type Selector -->
+                    <!-- Pemilih Tipe Soal (5 Tipe Soal) -->
                     <div class="card">
                         <div class="d-flex justify-between align-center mb-3">
-                            <div class="card-title mb-0"><i class="fas fa-plus"></i> Pilih Tipe Soal untuk Ditambahkan ke LJK:</div>
-                            <div class="text-primary" style="font-size: 0.85rem; font-weight: 600;">Mendukung 5 Format</div>
+                            <div class="card-title mb-0"><i class="fas fa-plus-circle"></i> Pilih Tipe Soal untuk Ditambahkan ke LJK:</div>
+                            <span class="badge badge-info">Mendukung 5 Format</span>
                         </div>
                         <div class="type-selector">
-                            <button class="type-btn" style="background: var(--primary); color: white;" onclick="app.addQuestion('single_choice')"><i class="far fa-check-circle"></i> Pilihan Ganda (A-D)</button>
-                            <button class="type-btn" onclick="app.addQuestion('multi_choice')"><i class="far fa-check-square"></i> Pilihan Kompleks</button>
-                            <button class="type-btn" onclick="app.addQuestion('true_false')"><i class="fas fa-toggle-on"></i> Benar / Salah (B/S)</button>
-                            <button class="type-btn" onclick="app.addQuestion('matching')"><i class="fas fa-project-diagram"></i> Menjodohkan</button>
-                            <button class="type-btn" onclick="app.addQuestion('short_answer')"><i class="fas fa-pen"></i> Isian Singkat (AI)</button>
+                            <button type="button" class="type-btn" onclick="addQuestion('Pilihan Ganda')"><i class="far fa-dot-circle"></i> Pilihan Ganda (A-D)</button>
+                            <button type="button" class="type-btn" onclick="addQuestion('Pilihan Ganda Kompleks')"><i class="far fa-check-square"></i> Pilihan Kompleks</button>
+                            <button type="button" class="type-btn" onclick="addQuestion('Benar/Salah')"><i class="fas fa-adjust"></i> Benar / Salah (B/S)</button>
+                            <button type="button" class="type-btn" onclick="addQuestion('Menjodohkan')"><i class="fas fa-project-diagram"></i> Menjodohkan</button>
+                            <button type="button" class="type-btn" onclick="addQuestion('Isian Singkat')"><i class="fas fa-pen-alt"></i> Isian Singkat (AI)</button>
                         </div>
-                        
-                        <div id="questionsContainer">
-                            <!-- Question rows injected here -->
+
+                        <!-- Daftar Soal Terbuat -->
+                        <div id="questionsList">
+                            <!-- Injected dynamically via JS -->
                         </div>
                     </div>
                 </div>
 
-                <!-- Preview Col -->
+                <!-- Right Column: Real-time Live Preview Kertas F4 -->
                 <div class="right-col">
-                    <div class="card mb-3 d-flex justify-between">
-                        <button class="btn btn-secondary" id="btnTestScan"><i class="fas fa-magic"></i> Uji Scan</button>
-                        <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Cetak PDF A4</button>
+                    <div class="card mb-3 d-flex justify-between gap-2">
+                        <button class="btn btn-secondary btn-sm" id="testScanBtn"><i class="fas fa-flask"></i> Uji Scan Demo</button>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-secondary btn-sm" id="downloadPdfBtn"><i class="fas fa-file-pdf"></i> Unduh PDF F4</button>
+                            <button class="btn btn-primary btn-sm" id="printBtn"><i class="fas fa-print"></i> Cetak Langsung (F4)</button>
+                        </div>
                     </div>
+
                     <div class="ljk-preview-wrapper">
+                        <!-- Preview Kertas F4 Folio (215 mm x 330 mm, maks 302 mm) -->
                         <div class="ljk-preview-paper" id="ljkPreview">
+                            <!-- 4 Solid Black Anchors (28 px x 28 px) -->
                             <div class="anchor-marker anchor-tl"></div>
                             <div class="anchor-marker anchor-tr"></div>
                             <div class="anchor-marker anchor-bl"></div>
                             <div class="anchor-marker anchor-br"></div>
-                            
-                            <div class="ljk-kop">
-                                <div class="ljk-kop-text">
-                                    <h3 id="prevInstansi">DINAS PENDIDIKAN DAN KEBUDAYAAN</h3>
-                                    <h1>LEMBAR JAWABAN KOMPUTER (LJK) SMART AI</h1>
-                                    <h2 id="prevTitle">Penilaian Akhir Semester - IPA Biologi</h2>
+
+                            <!-- Header Box with Outer Border -->
+                            <div class="ljk-header-box">
+                                <div class="ljk-kop-inner">
+                                    <div class="ljk-kop-text">
+                                        <h3 id="previewInstansi">DINAS PENDIDIKAN DAN KEBUDAYAAN</h3>
+                                        <h1 id="previewLjkTitle">LEMBAR JAWABAN KOMPUTER (LJK) SMART AI</h1>
+                                        <h2 id="previewJudul">Penilaian Akhir Semester - IPA Biologi</h2>
+                                    </div>
+                                    <div class="ljk-qr-box">
+                                        <div class="ljk-qr" id="previewQr"></div>
+                                        <div class="ljk-qr-text" id="previewKode">BIO-SMP8-2025</div>
+                                    </div>
                                 </div>
-                                <div class="ljk-qr-box">
-                                    <div class="ljk-qr" id="qrcode"></div>
-                                    <div class="ljk-qr-text" id="prevCode">BIO-SMP8-2025</div>
+
+                                <div class="ljk-meta-row">
+                                    <div class="ljk-meta-item">Mata Pelajaran: <strong id="previewMapel">Ilmu Pengetahuan Alam (IPA)</strong></div>
+                                    <div class="ljk-meta-item">Kelas / Semester: <strong id="previewKelas">Kelas 8A</strong></div>
+                                    <div class="ljk-meta-item">Tahun Ajaran: <strong id="previewTahun">2024/2025</strong></div>
+                                    <div class="ljk-meta-item">KKM: <strong id="previewKKM">75.00</strong></div>
                                 </div>
                             </div>
-                            
-                            <div class="ljk-meta-grid">
-                                <div class="ljk-meta-item">Mata Pelajaran: <strong id="prevSubject">Ilmu Pengetahuan Alam (IPA)</strong></div>
-                                <div class="ljk-meta-item">Kelas / Semester: <strong id="prevClass">Kelas 8A</strong></div>
-                                <div class="ljk-meta-item">Tahun Ajaran: <strong>2024/2025</strong></div>
-                                <div class="ljk-meta-item">KKM: <strong id="prevKKM">75.00</strong></div>
-                            </div>
-                            
-                            <div class="d-flex gap-2 mb-2">
-                                <div class="ljk-student-box ljk-student-left">
+
+                            <!-- Student Info & Signature Box (Outer Border persis gambar) -->
+                            <div class="ljk-student-box">
+                                <div class="ljk-student-left">
                                     <div class="box-label">NAMA LENGKAP SISWA (HURUF BALOK / KAPITAL):</div>
-                                    <div class="char-grid" id="nameGrid1"></div>
-                                    <div class="char-grid" id="nameGrid2"></div>
-                                    
+                                    <div class="char-grid" id="previewNameGrid1"></div>
+                                    <div class="char-grid" id="previewNameGrid2"></div>
+
                                     <div class="petunjuk-box">
                                         <strong>PETUNJUK PENGISIAN:</strong><br>
-                                        • Gunakan pensil 2B atau pulpen hitam pekat. Hitamkan bulatan penuh.<br>
+                                        • Gunakan pensil 2B atau pulpen hitam pekat. Hitamkan bulatan: ●<br>
                                         • Tuliskan isian singkat dengan rapi di dalam kotak bertanda.
                                     </div>
                                 </div>
-                                <div class="ljk-student-box ljk-student-right">
+
+                                <div class="ljk-student-right">
                                     <div>
                                         <div class="box-label">NOMOR ABSEN:</div>
-                                        <div class="d-flex gap-2 mb-2"><div class="char-box"></div><div class="char-box"></div></div>
-                                        
-                                        <div class="box-label">KELAS / ROMBEL:</div>
-                                        <div class="d-flex gap-2"><div class="char-box"></div><div class="char-box"></div><div class="char-box"></div></div>
+                                        <div class="char-grid" id="previewAbsenGrid"></div>
+
+                                        <div class="box-label mt-2">KELAS / ROMBEL:</div>
+                                        <div class="char-grid" id="previewRombelGrid"></div>
                                     </div>
-                                    <div style="border-top: 1px solid black; padding-top: 4px; font-size: 0.5rem; text-align: center; margin-top: 20px;">
-                                        Tanda Tangan Murid:
+
+                                    <div>
+                                        <div class="sig-title">Tanda Tangan Murid:</div>
+                                        <div class="sig-line"></div>
                                     </div>
                                 </div>
                             </div>
-                            
+
+                            <!-- Section Title Banner -->
                             <div class="ljk-section-title">LEMBAR JAWABAN SOAL</div>
-                            
-                            <div id="previewQuestions" style="column-count: 2; column-gap: 20px;">
-                                <!-- Questions preview generated here -->
+
+                            <!-- Questions Container: 5 Bentuk Soal Proporsional -->
+                            <div id="previewAnswers">
+                                <!-- Rendered dynamically via JS -->
+                            </div>
+
+                            <!-- Footer LJK -->
+                            <div class="ljk-footer-text">
+                                SmartLJK AI • Sistem OMR & OCR Cerdas • Standar Cetak Kertas F4 (215 x 330 mm) • 100% Pas 1 Lembar
                             </div>
                         </div>
                     </div>
@@ -180,226 +210,349 @@
             </div>
         </section>
 
-        <!-- PAGE 2: SCAN LJK -->
+        <!-- ============================================================
+             PAGE 2: SCAN LJK (Pemeriksaan LJK Otomatis via Foto/Kamera/PDF)
+             ============================================================ -->
         <section id="scan" class="page-section hidden">
-            <!-- (Code for Scan LJK - Standard drag drop UI from original) -->
             <div class="split-layout">
+                <!-- Left Column: Source Selection & Actions -->
                 <div class="left-col">
                     <div class="card">
-                        <h2 class="card-title">Pilih Ujian</h2>
+                        <h2 class="card-title"><i class="fas fa-file-invoice text-primary"></i> 1. Tentukan Ujian & Identitas</h2>
                         <div class="input-group">
+                            <label for="scanExamSelect">Pilih Ujian yang Diperiksa *</label>
                             <select id="scanExamSelect">
                                 <option value="">-- Pilih Ujian Terlebih Dahulu --</option>
                             </select>
                         </div>
                         <div class="grid-2">
-                            <div class="input-group"><input type="text" id="scanStudentName" placeholder="Nama Siswa"></div>
-                            <div class="input-group"><input type="text" id="scanStudentNis" placeholder="NIS / No Absen"></div>
+                            <div class="input-group mb-0">
+                                <label for="scanStudentName">Nama Siswa (Opsional/Otomatis)</label>
+                                <input type="text" id="scanStudentName" placeholder="Terdireksi otomatis dari LJK">
+                            </div>
+                            <div class="input-group mb-0">
+                                <label for="scanStudentNis">NIS / No. Absen</label>
+                                <input type="text" id="scanStudentNis" placeholder="Terdireksi otomatis dari LJK">
+                            </div>
                         </div>
                     </div>
 
                     <div class="card">
-                        <div class="tab-nav mb-3">
-                            <button class="tab-btn active" data-scan-tab="upload">Unggah Foto</button>
-                            <button class="tab-btn" data-scan-tab="camera">Kamera HP</button>
-                            <button class="tab-btn" data-scan-tab="pdf">Scan PDF (Batch)</button>
-                        </div>
+                        <h2 class="card-title"><i class="fas fa-camera-retro text-primary"></i> 2. Masukkan Lembar Jawaban</h2>
                         
-                        <div id="tab-upload" class="scan-tab-content">
+                        <!-- 3 Tab Buttons (Unggah Foto, Kamera HP, Scan PDF Batch) -->
+                        <div class="tab-nav mb-3">
+                            <button type="button" class="tab-btn active" data-tab="upload"><i class="fas fa-file-image"></i> Unggah Foto</button>
+                            <button type="button" class="tab-btn" data-tab="camera"><i class="fas fa-camera"></i> Kamera HP</button>
+                            <button type="button" class="tab-btn" data-tab="pdf"><i class="fas fa-file-pdf"></i> Scan PDF (Batch)</button>
+                        </div>
+
+                        <!-- Tab 1: Unggah Foto -->
+                        <div id="tab-upload" class="tab-pane active">
                             <div class="dropzone" id="scanDropzone">
                                 <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
-                                <p>Seret & lepas foto LJK di sini</p>
-                                <input type="file" id="scanFileInput" accept="image/jpeg, image/png" hidden>
-                                <button class="btn btn-secondary mt-2" onclick="document.getElementById('scanFileInput').click()">Pilih File Gambar</button>
+                                <div class="dropzone-text">Seret & lepas foto lembar LJK di sini</div>
+                                <p style="font-size: 0.8rem; color: #94A3B8;">Mendukung format JPG, JPEG, PNG (Pencahayaan terang & 4 anchor terlihat jelas)</p>
+                                <input type="file" id="scanFileInput" accept="image/jpeg, image/png, image/webp" hidden>
+                                <button type="button" class="btn btn-secondary btn-sm mt-3" onclick="document.getElementById('scanFileInput').click()"><i class="fas fa-folder-open"></i> Pilih Berkas Foto</button>
                             </div>
-                        </div>
-
-                        <div id="tab-camera" class="scan-tab-content hidden text-center">
-                            <div class="camera-container" id="cameraContainer">
-                                <video id="cameraVideo" autoplay playsinline></video>
-                                <div class="guide-corner gc-tl"></div>
-                                <div class="guide-corner gc-tr"></div>
-                                <div class="guide-corner gc-bl"></div>
-                                <div class="guide-corner gc-br"></div>
-                            </div>
-                            <button class="btn btn-primary mt-3" id="btnCapture"><i class="fas fa-camera"></i> Ambil Foto LJK</button>
-                        </div>
-
-                        <div id="tab-pdf" class="scan-tab-content hidden">
-                            <div class="dropzone" id="pdfDropzone">
-                                <i class="fas fa-file-pdf dropzone-icon"></i>
-                                <p>Unggah file PDF (Maks 32 halaman)</p>
-                                <input type="file" id="pdfFileInput" accept="application/pdf" hidden>
-                                <button class="btn btn-secondary mt-2" onclick="document.getElementById('pdfFileInput').click()">Pilih PDF</button>
-                            </div>
-                            <div id="pdfQueue" class="mt-3"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="right-col">
-                    <div class="card h-100">
-                        <h2 class="card-title">Hasil Pemeriksaan Instan</h2>
-                        <div id="scanResultEmpty" class="text-center text-secondary py-5">
-                            <i class="fas fa-tasks fa-3x mb-3" style="opacity: 0.2"></i>
-                            <p>Pindai LJK untuk melihat hasil di sini</p>
-                        </div>
-                        
-                        <div id="scanResultContent" class="hidden">
-                            <div class="score-card mb-3">
-                                <div>NILAI AKHIR</div>
-                                <div class="score-value" id="resScore">0.00</div>
-                                <div class="d-flex justify-between px-3">
-                                    <div>Skor: <strong id="resTotal">0/0</strong></div>
-                                    <div id="resStatus" class="badge badge-success">LULUS</div>
+                            <div id="scanImagePreview" class="hidden mt-3 text-center">
+                                <img src="" alt="Pratinjau LJK" class="img-preview">
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('scanFileInput').click()"><i class="fas fa-sync"></i> Ganti Foto</button>
                                 </div>
                             </div>
-                            
-                            <h3 class="font-bold mb-2">Rincian Jawaban</h3>
-                            <div style="max-height: 400px; overflow-y: auto;">
-                                <table class="table" style="font-size: 0.8rem;">
-                                    <thead><tr><th>No</th><th>Tipe</th><th>Siswa</th><th>Kunci</th><th>Skor</th></tr></thead>
-                                    <tbody id="resDetailsTable"></tbody>
-                                </table>
+                        </div>
+
+                        <!-- Tab 2: Kamera HP -->
+                        <div id="tab-camera" class="tab-pane hidden text-center">
+                            <div class="camera-container" id="cameraContainer">
+                                <video id="cameraVideo" autoplay playsinline></video>
+                                <div class="camera-guide guide-tl"></div>
+                                <div class="camera-guide guide-tr"></div>
+                                <div class="camera-guide guide-bl"></div>
+                                <div class="camera-guide guide-br"></div>
                             </div>
+                            <div class="d-flex justify-center gap-2 mt-3">
+                                <button type="button" class="btn btn-secondary" id="switchCameraBtn"><i class="fas fa-sync-alt"></i> Ganti Kamera</button>
+                                <button type="button" class="btn btn-primary" id="captureBtn"><i class="fas fa-camera"></i> Ambil Foto LJK</button>
+                            </div>
+                            <canvas id="cameraCanvas" hidden></canvas>
+                        </div>
+
+                        <!-- Tab 3: Scan PDF (Batch 1 Kelas) -->
+                        <div id="tab-pdf" class="tab-pane hidden">
+                            <div class="dropzone" id="pdfDropzone">
+                                <i class="fas fa-file-pdf dropzone-icon" style="color: #EF4444;"></i>
+                                <div class="dropzone-text">Unggah File PDF LJK (Hingga 32 Halaman)</div>
+                                <p style="font-size: 0.8rem; color: #94A3B8;">Sistem akan mengekstrak setiap halaman otomatis untuk diperiksa berurutan</p>
+                                <input type="file" id="pdfFileInput" accept="application/pdf" hidden>
+                                <button type="button" class="btn btn-secondary btn-sm mt-3" onclick="document.getElementById('pdfFileInput').click()"><i class="fas fa-folder-open"></i> Pilih Dokumen PDF</button>
+                            </div>
+                            
+                            <div id="pdfQueueContainer" class="hidden mt-3">
+                                <div class="d-flex justify-between align-center mb-2">
+                                    <h4 class="mb-0" id="pdfQueueInfo">Daftar Antrean Halaman</h4>
+                                    <span class="badge badge-info" id="pdfTotalBadge">0 Hal</span>
+                                </div>
+                                <div class="pdf-queue-list" id="pdfQueueList"></div>
+                                <div class="d-flex justify-between mt-2">
+                                    <button type="button" class="btn btn-ghost btn-sm" id="pdfPrevBtn" disabled>&laquo; Sebelumnya</button>
+                                    <button type="button" class="btn btn-ghost btn-sm" id="pdfNextBtn" disabled>Selanjutnya &raquo;</button>
+                                </div>
+                                <button type="button" class="btn btn-primary w-100 mt-3" id="processAllPdfBtn"><i class="fas fa-bolt"></i> Periksa Semua Halaman Sekaligus</button>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Eksekusi Utama Scan -->
+                        <button type="button" class="btn btn-primary w-100 mt-4 btn-large" id="processScanBtn">
+                            <i class="fas fa-search"></i> Proses Scan LJK Sekarang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Hasil Pemeriksaan Instan -->
+                <div class="right-col">
+                    <div class="card h-100" id="scanEmptyState">
+                        <h2 class="card-title"><i class="fas fa-clipboard-check text-primary"></i> Hasil Pemeriksaan Instan</h2>
+                        <div class="text-center text-secondary py-5">
+                            <i class="fas fa-camera fa-4x mb-3" style="opacity: 0.2"></i>
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.5rem;">Belum Ada Lembar Dipindai</h3>
+                            <p style="font-size: 0.88rem; max-width: 320px; margin: 0 auto;">Pilih foto LJK atau aktifkan kamera lalu klik "Proses Scan LJK Sekarang" untuk melihat nilai dan analisis jawaban otomatis.</p>
+                        </div>
+                    </div>
+
+                    <div class="card h-100 hidden" id="scanResultsArea">
+                        <h2 class="card-title"><i class="fas fa-award text-primary"></i> Hasil Pemeriksaan Siswa</h2>
+
+                        <div class="student-info-card mb-3" id="resultStudentInfo">
+                            <h3 id="resName" style="font-size: 1.15rem; font-weight: 800; color: var(--primary);">Nama Siswa</h3>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">
+                                NIS: <strong id="resNis">-</strong> | Kelas: <strong id="resClass">-</strong>
+                            </p>
+                        </div>
+
+                        <div class="score-card mb-3">
+                            <div style="font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; opacity: 0.9;">NILAI AKHIR</div>
+                            <div class="score-display">
+                                <span class="score-value" id="resScore">0.00</span>
+                                <span class="score-max">/ 100</span>
+                            </div>
+                            <div class="d-flex justify-between px-2 mt-2" style="font-size: 0.85rem;">
+                                <div>Total Skor: <strong id="resTotal">0 / 0</strong></div>
+                                <div>Akurasi OMR: <strong id="resAccuracy">0%</strong></div>
+                                <div id="resStatus" class="badge badge-success">LULUS</div>
+                            </div>
+                        </div>
+
+                        <h3 class="mb-2" style="font-size: 0.95rem; font-weight: 700;">Rincian Tiap Butir Soal</h3>
+                        <div class="table-responsive" style="max-height: 380px;">
+                            <table class="table" id="resTable">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Tipe</th>
+                                        <th>Jawaban Siswa</th>
+                                        <th>Kunci</th>
+                                        <th>Nilai</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rows injected dynamically -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- PAGE 3: DASHBOARD GURU -->
+        <!-- ============================================================
+             PAGE 3: DASHBOARD GURU
+             ============================================================ -->
         <section id="dashboard" class="page-section hidden">
-            <!-- (Code for Dashboard - Standard from previous, just updated styles) -->
             <div class="card mb-3">
                 <div class="d-flex justify-between align-center">
-                    <h2 class="card-title mb-0">Dashboard Statistik</h2>
-                    <select id="dashExamSelect" class="w-auto"><option value="">-- Pilih Ujian --</option></select>
+                    <div>
+                        <h2 class="card-title mb-0"><i class="fas fa-chart-pie text-primary"></i> Statistik & Rekap Penilaian</h2>
+                        <p class="text-secondary" style="font-size: 0.85rem; margin-top: 2px;">Pantau performa kelas, rata-rata nilai, dan ketuntasan KKM siswa.</p>
+                    </div>
+                    <select id="dashExamSelect" class="w-auto">
+                        <option value="">-- Pilih Ujian --</option>
+                    </select>
                 </div>
             </div>
-            
+
             <div class="grid-4 mb-3">
-                <div class="card stat-card"><div class="stat-icon bg-blue"><i class="fas fa-users"></i></div><div><p class="stat-label">Peserta</p><h3 class="stat-value" id="dashPeserta">0</h3></div></div>
-                <div class="card stat-card"><div class="stat-icon bg-green"><i class="fas fa-chart-line"></i></div><div><p class="stat-label">Rata-rata</p><h3 class="stat-value" id="dashRata">0.00</h3></div></div>
-                <div class="card stat-card"><div class="stat-icon bg-yellow"><i class="fas fa-trophy"></i></div><div><p class="stat-label">Tertinggi</p><h3 class="stat-value" id="dashMax">0</h3></div></div>
-                <div class="card stat-card"><div class="stat-icon bg-red"><i class="fas fa-check-circle"></i></div><div><p class="stat-label">Kelulusan</p><h3 class="stat-value" id="dashLulus">0%</h3></div></div>
+                <div class="card stat-card">
+                    <div class="stat-icon bg-blue"><i class="fas fa-users"></i></div>
+                    <div>
+                        <p class="stat-label">Total Peserta</p>
+                        <h3 class="stat-value" id="dashPeserta">0</h3>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon bg-green"><i class="fas fa-chart-line"></i></div>
+                    <div>
+                        <p class="stat-label">Rata-rata Nilai</p>
+                        <h3 class="stat-value" id="dashRata">0.00</h3>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon bg-yellow"><i class="fas fa-trophy"></i></div>
+                    <div>
+                        <p class="stat-label">Tertinggi / Terendah</p>
+                        <h3 class="stat-value" id="dashMax">0 / 0</h3>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon bg-red"><i class="fas fa-check-circle"></i></div>
+                    <div>
+                        <p class="stat-label">Ketuntasan (KKM)</p>
+                        <h3 class="stat-value" id="dashLulus">0%</h3>
+                    </div>
+                </div>
             </div>
-            
+
             <div class="card">
                 <div class="d-flex justify-between align-center mb-3">
-                    <h2 class="card-title mb-0">Rekap Nilai Siswa</h2>
-                    <button class="btn btn-success" style="background:#10B981; color:white;" id="btnExportExcel"><i class="fas fa-file-excel"></i> Ekspor Excel</button>
+                    <h2 class="card-title mb-0"><i class="fas fa-list-ol"></i> Daftar Peringkat & Hasil Siswa</h2>
+                    <button class="btn btn-success" id="btnExportExcel"><i class="fas fa-file-excel"></i> Ekspor ke Excel (.xlsx)</button>
                 </div>
-                <table class="table" id="dashTable">
-                    <thead>
-                        <tr><th>Peringkat</th><th>NIS</th><th>Nama</th><th>Nilai</th><th>Akurasi OMR</th><th>Status</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table" id="dashTable">
+                        <thead>
+                            <tr>
+                                <th>Peringkat</th>
+                                <th>NIS</th>
+                                <th>Nama Siswa</th>
+                                <th>Nilai Akhir</th>
+                                <th>Akurasi OMR</th>
+                                <th>Status KKM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
-        <!-- PAGE 4: GENERATOR SOAL (SUPER MEWAH) -->
+        <!-- ============================================================
+             PAGE 4: GENERATOR SOAL AI (ASESMEN LENGKAP & DOCX)
+             ============================================================ -->
         <section id="generator" class="page-section hidden">
             <div class="split-layout">
                 <div class="left-col">
                     <div class="card">
-                        <h2 class="card-title text-primary"><i class="fas fa-robot"></i> Generator Soal AI (Asesmen Lengkap)</h2>
-                        
-                        <div class="bg-blue-soft">
+                        <h2 class="card-title text-primary"><i class="fas fa-brain"></i> Generator Soal AI (Asesmen Lengkap)</h2>
+
+                        <div class="bg-blue-soft mb-3" style="background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; padding: 0.85rem 1rem; border-radius: 8px; font-size: 0.88rem; display: flex; align-items: center; gap: 0.75rem;">
                             <i class="fas fa-info-circle fa-2x"></i>
-                            <div>1x generate langsung menghasilkan 3 bagian: Kisi-kisi, Kartu Soal, dan Soal Sumatif. Output dapat diunduh ke format Word (.docx) atau diimpor langsung ke LJK.</div>
+                            <div>1x klik generate langsung menghasilkan 3 bagian lengkap: <strong>Kisi-kisi</strong>, <strong>Kartu Soal</strong>, dan <strong>Naskah Soal Sumatif</strong>. Hasil dapat langsung diunduh ke <strong>Word (.docx)</strong> atau diimpor ke LJK.</div>
                         </div>
 
-                        <!-- Gen Form -->
                         <div class="gen-section">
                             <div class="gen-section-title">Identitas Mata Pelajaran</div>
                             <div class="grid-2">
                                 <div class="input-group">
                                     <label>Mata Pelajaran *</label>
-                                    <input type="text" id="genMapel" placeholder="Contoh: Matematika">
+                                    <input type="text" id="genMapel" placeholder="Contoh: Matematika" value="Matematika">
                                 </div>
                                 <div class="input-group">
                                     <label>Jenjang *</label>
                                     <select id="genJenjang">
-                                        <option value="SD/MI">SD/MI</option>
                                         <option value="SMP/MTs">SMP/MTs</option>
+                                        <option value="SD/MI">SD/MI</option>
                                         <option value="SMA/SMK/MA">SMA/SMK/MA</option>
                                     </select>
                                 </div>
                                 <div class="input-group">
                                     <label>Kelas *</label>
-                                    <input type="text" id="genKelasInput" placeholder="Contoh: VII atau 10">
+                                    <input type="text" id="genKelasInput" placeholder="Contoh: VII atau 8" value="8">
                                 </div>
                                 <div class="input-group">
-                                    <label>Fase</label>
+                                    <label>Fase Kurikulum</label>
                                     <select id="genFase">
-                                        <option value="A">Fase A (Kelas 1-2)</option>
-                                        <option value="B">Fase B (Kelas 3-4)</option>
-                                        <option value="C">Fase C (Kelas 5-6)</option>
-                                        <option value="D">Fase D (Kelas 7-9)</option>
-                                        <option value="E">Fase E (Kelas 10)</option>
-                                        <option value="F">Fase F (Kelas 11-12)</option>
+                                        <option value="Fase D">Fase D (Kelas 7-9)</option>
+                                        <option value="Fase A">Fase A (Kelas 1-2)</option>
+                                        <option value="Fase B">Fase B (Kelas 3-4)</option>
+                                        <option value="Fase C">Fase C (Kelas 5-6)</option>
+                                        <option value="Fase E">Fase E (Kelas 10)</option>
+                                        <option value="Fase F">Fase F (Kelas 11-12)</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
                         <div class="gen-section">
-                            <div class="gen-section-title">Data Penandatangan (Untuk KOP & Lembar Pengesahan)</div>
+                            <div class="gen-section-title">Data Penandatangan (KOP & Lembar Pengesahan)</div>
                             <div class="grid-2">
-                                <div class="input-group"><label>Nama Sekolah</label><input type="text" id="genSekolah" placeholder="Contoh: SMP Negeri 1 Jakarta"></div>
-                                <div class="input-group"><label>Kota</label><input type="text" id="genKota" placeholder="Contoh: Jakarta"></div>
-                                <div class="input-group"><label>Kepala Sekolah</label><input type="text" id="genKepsek" placeholder="Nama Kepala Sekolah"></div>
-                                <div class="input-group"><label>Guru Mata Pelajaran</label><input type="text" id="genGuru" placeholder="Nama Guru"></div>
-                                <div class="input-group"><label>NIP Kepala Sekolah</label><input type="text" id="genNipKepsek" placeholder="No. NIP"></div>
-                                <div class="input-group"><label>NIP Guru</label><input type="text" id="genNipGuru" placeholder="No. NIP"></div>
+                                <div class="input-group"><label>Nama Sekolah</label><input type="text" id="genSekolah" placeholder="Contoh: SMP Negeri 7 Pedungan" value="SMP Negeri 7 Pedungan"></div>
+                                <div class="input-group"><label>Kota / Kabupaten</label><input type="text" id="genKota" placeholder="Contoh: Denpasar" value="Denpasar"></div>
+                                <div class="input-group"><label>Nama Kepala Sekolah</label><input type="text" id="genKepsek" placeholder="Nama Kepala Sekolah"></div>
+                                <div class="input-group"><label>Guru Mata Pelajaran</label><input type="text" id="genGuru" placeholder="Nama Guru Pengampu"></div>
+                                <div class="input-group"><label>NIP Kepala Sekolah</label><input type="text" id="genNipKepsek" placeholder="NIP Kepala Sekolah"></div>
+                                <div class="input-group"><label>NIP Guru Pengampu</label><input type="text" id="genNipGuru" placeholder="NIP Guru"></div>
                             </div>
                         </div>
 
                         <div class="gen-section">
-                            <div class="gen-section-title">Acuan Konten & Indikator</div>
+                            <div class="gen-section-title">Acuan Konten & Indikator Soal</div>
                             <div class="input-group">
-                                <label>Lingkup Materi / Tujuan Pembelajaran *</label>
-                                <textarea id="genMateri" placeholder="Contoh: Jaring-jaring Makanan, Rantai Makanan..."></textarea>
+                                <label>Lingkup Materi / Capaian Pembelajaran *</label>
+                                <textarea id="genMateri" placeholder="Tuliskan materi pokok, contoh: Teorema Pythagoras, Tripel Pythagoras, Penerapan pada bangun ruang">Teorema Pythagoras dan penerapannya dalam kehidupan sehari-hari</textarea>
                             </div>
-                            <div class="input-group">
+                            <div class="input-group mb-0">
                                 <label>Indikator Soal *</label>
-                                <textarea id="genIndikator" placeholder="Tuliskan indikator pencapaian yang akan diuji..."></textarea>
+                                <textarea id="genIndikator" placeholder="Tuliskan indikator kompetensi siswa yang diuji...">Siswa mampu menentukan panjang sisi segitiga siku-siku dan memecahkan soal cerita kontekstual</textarea>
                             </div>
                         </div>
 
                         <div class="gen-section">
-                            <div class="gen-section-title">Karakteristik Soal</div>
+                            <div class="gen-section-title">Karakteristik & Format Soal</div>
                             <div class="grid-2">
                                 <div class="input-group">
                                     <label>Jenis Taksonomi</label>
-                                    <select id="genTaksonomi"><option value="Bloom">Bloom</option></select>
+                                    <select id="genTaksonomi"><option value="Bloom">Taksonomi Bloom</option></select>
                                 </div>
                                 <div class="input-group">
                                     <label>Tingkat Kognitif</label>
-                                    <select id="genKognitif"><option value="C1-C4">C1-C4 (Mengingat - Menganalisis)</option><option value="C4-C6">C4-C6 (HOTS)</option></select>
+                                    <select id="genKognitif">
+                                        <option value="C1-C4">C1-C4 (Mengingat s.d Menganalisis)</option>
+                                        <option value="C4-C6">C4-C6 (HOTS Tingkat Tinggi)</option>
+                                    </select>
                                 </div>
                                 <div class="input-group">
                                     <label>Tingkat Kesulitan</label>
-                                    <select id="genKesulitan"><option value="Sedang">Sedang (Proporsional)</option><option value="Sulit">Sulit (HOTS)</option></select>
+                                    <select id="genKesulitan">
+                                        <option value="Sedang">Sedang (Proporsional Standar)</option>
+                                        <option value="Sulit">Sulit (Tantangan Penalaran)</option>
+                                    </select>
                                 </div>
                                 <div class="input-group">
                                     <label>Jumlah Opsi Pilihan Ganda</label>
-                                    <select id="genOpsi"><option value="4">4 Opsi (A-D) - SMP</option><option value="5">5 Opsi (A-E) - SMA</option></select>
+                                    <select id="genOpsi">
+                                        <option value="4 Opsi (A-D)">4 Opsi (A-D) - Standar SMP</option>
+                                        <option value="5 Opsi (A-E)">5 Opsi (A-E) - Standar SMA</option>
+                                    </select>
                                 </div>
                                 <div class="input-group">
                                     <label>Bentuk Soal</label>
-                                    <select id="genBentuk"><option value="Campuran">Campuran (5 Tipe Soal)</option><option value="Pilihan Ganda">Hanya Pilihan Ganda</option></select>
+                                    <select id="genBentuk">
+                                        <option value="Campuran">Campuran (5 Format Soal)</option>
+                                        <option value="Pilihan Ganda Saja">Hanya Pilihan Ganda</option>
+                                    </select>
                                 </div>
                                 <div class="input-group">
-                                    <label>Jumlah Soal</label>
-                                    <input type="number" id="genJumlahFull" value="10" min="1" max="50">
+                                    <label>Jumlah Soal Ditargetkan</label>
+                                    <input type="number" id="genJumlahFull" value="10" min="1" max="40">
                                 </div>
                             </div>
                         </div>
 
-                        <button class="btn btn-primary w-100" id="btnGenerateFull" style="padding: 1rem; font-size: 1.1rem;">
+                        <button type="button" class="btn btn-primary w-100 btn-large" id="btnGenerateFull">
                             <i class="fas fa-magic"></i> Generate Asesmen Lengkap AI
                         </button>
                     </div>
@@ -408,16 +561,16 @@
                 <div class="right-col">
                     <div class="card h-100 d-flex flex-col">
                         <div class="d-flex justify-between align-center mb-3">
-                            <h2 class="card-title mb-0">Hasil Generate AI</h2>
+                            <h2 class="card-title mb-0"><i class="fas fa-file-code"></i> Hasil Generate AI</h2>
                         </div>
                         <div class="gen-output-container flex-grow mb-3">
-                            <textarea id="genOutputFull" class="w-100 h-100" style="min-height: 500px; font-family: monospace; font-size: 12px; background: #1E293B; color: #10B981; padding: 1rem;" readonly placeholder="Hasil AI akan muncul di sini..."></textarea>
+                            <textarea id="genOutputFull" class="w-100 h-100" style="min-height: 480px; font-family: monospace; font-size: 12px; background: #0F172A; color: #34D399; padding: 1.25rem; border-radius: 8px; line-height: 1.6;" readonly placeholder="Hasil asesmen lengkap (Kisi-kisi, Kartu Soal, Soal Sumatif) dari AI akan tampil di sini..."></textarea>
                         </div>
-                        <div class="grid-2">
-                            <button class="btn btn-secondary" id="btnSalin"><i class="fas fa-copy"></i> Salin Teks</button>
-                            <button class="btn btn-primary" id="btnUnduhDocx"><i class="fas fa-file-word"></i> Unduh DOCX (Word)</button>
+                        <div class="grid-2 mb-2">
+                            <button type="button" class="btn btn-secondary" id="btnSalin"><i class="fas fa-copy"></i> Salin Teks</button>
+                            <button type="button" class="btn btn-primary" id="btnUnduhDocx"><i class="fas fa-file-word"></i> Unduh DOCX (Word)</button>
                         </div>
-                        <button class="btn btn-success w-100 mt-2" style="background: #10B981; color: white; border:none;" id="btnImportLJK"><i class="fas fa-file-import"></i> Impor Soal ke LJK Beranda</button>
+                        <button type="button" class="btn btn-success w-100" id="btnImportLJK"><i class="fas fa-file-import"></i> Impor Soal ke LJK Beranda</button>
                     </div>
                 </div>
             </div>
@@ -425,16 +578,10 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer>
-        <p>SmartLJK AI &copy; 2026 - Profesional Dashboard System</p>
-    </footer>
-
     <!-- Toast Notification -->
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- Scripts -->
-    <!-- QRCode CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>

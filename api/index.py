@@ -278,6 +278,7 @@ async def delete_exam(exam_id: int):
 # LJK PDF Generation
 # ============================================================
 
+@app.get("/api/generate-ljk/{exam_id}")
 @app.post("/api/generate-ljk/{exam_id}")
 async def generate_ljk(exam_id: int):
     """Generate PDF LJK untuk sebuah ujian"""
@@ -619,7 +620,11 @@ async def generate_questions(req: GenerateQuestionsRequest):
         req_dict = req.dict()
         result_text = ai_grader.generate_exam_questions(**req_dict)
         if result_text:
-            return {"questions": result_text, "status": "success"}
+            return {
+                "questions": result_text,
+                "generated_questions": result_text,
+                "status": "success"
+            }
         else:
             raise HTTPException(status_code=500, detail="Gemini API tidak memberikan respons")
     except HTTPException:
@@ -628,11 +633,15 @@ async def generate_questions(req: GenerateQuestionsRequest):
         raise HTTPException(status_code=500, detail=f"Gagal generate soal: {str(e)}")
 
 class DocxDownloadRequest(BaseModel):
-    text: str
+    text: Optional[str] = None
+    content: Optional[str] = None
+    title: Optional[str] = "Asesmen_Lengkap"
 
 @app.post("/api/download-docx")
 async def download_docx(req: DocxDownloadRequest):
     """Download hasil asesmen sebagai file .docx"""
+    raw_text = req.text or req.content or ""
+    filename = f"{req.title or 'Asesmen_Lengkap'}.docx"
     try:
         from docx import Document
         from docx.shared import Pt
@@ -644,7 +653,7 @@ async def download_docx(req: DocxDownloadRequest):
     # Simple markdown to text processing
     # Can enhance later with full markdown-to-docx converter if needed.
     # For now, just split by newlines and handle some basic formatting.
-    for line in req.text.split('\n'):
+    for line in raw_text.split('\n'):
         line_clean = line.strip()
         if line_clean.startswith('# '):
             p = doc.add_heading(line_clean[2:], level=1)
@@ -667,7 +676,7 @@ async def download_docx(req: DocxDownloadRequest):
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={
-            "Content-Disposition": "attachment; filename=Asesmen_Lengkap.docx"
+            "Content-Disposition": f"attachment; filename={filename}"
         }
     )
 
