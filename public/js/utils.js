@@ -3,7 +3,7 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
     : '/api'; // Adjust for production
 
 /**
- * Generic API Call wrapper
+ * Generic API Call wrapper dengan automatic dual-routing fallback
  * @param {string} endpoint - API endpoint
  * @param {string} method - HTTP Method (GET, POST, etc.)
  * @param {object|FormData} data - Payload
@@ -11,7 +11,9 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
  * @returns {Promise<any>} Response JSON
  */
 async function apiCall(endpoint, method = 'GET', data = null, isFormData = false) {
-    const url = `${API_BASE}${endpoint}`;
+    let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    let url = `${API_BASE}${cleanEndpoint}`;
+    
     const options = {
         method,
         headers: {}
@@ -20,7 +22,6 @@ async function apiCall(endpoint, method = 'GET', data = null, isFormData = false
     if (data) {
         if (isFormData) {
             options.body = data;
-            // Don't set Content-Type for FormData, browser sets it with boundary
         } else {
             options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(data);
@@ -28,12 +29,31 @@ async function apiCall(endpoint, method = 'GET', data = null, isFormData = false
     }
 
     try {
-        const response = await fetch(url, options);
+        let response = await fetch(url, options);
+
+        // Jika 404 (misal karena Vercel rewrite prefix mismatch), coba rute alternatif
+        if (response.status === 404) {
+            let altUrl = url.includes('/api/') 
+                ? url.replace('/api/', '/') 
+                : url.replace(window.location.origin, `${window.location.origin}/api`);
+            
+            if (altUrl !== url) {
+                try {
+                    const altRes = await fetch(altUrl, options);
+                    if (altRes.ok) {
+                        return await altRes.json();
+                    }
+                } catch (err) {
+                    // Abaikan fallback error, gunakan error utama di bawah
+                }
+            }
+        }
+
         if (!response.ok) {
             let errMsg = `Error ${response.status}: ${response.statusText}`;
             try {
                 const errData = await response.json();
-                errMsg = errData.message || errMsg;
+                errMsg = errData.detail || errData.message || errMsg;
             } catch (e) {
                 // Ignore parse error
             }
@@ -70,14 +90,12 @@ function showNotification(message, type = 'info') {
 
     container.appendChild(toast);
 
-    // Trigger animation
     setTimeout(() => toast.classList.add('show'), 10);
 
-    // Remove after 3 seconds
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 3500);
 }
 
 /**

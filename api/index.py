@@ -7,7 +7,7 @@ import json
 import io
 import base64
 from datetime import datetime
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
@@ -36,6 +36,7 @@ try:
 except ImportError:
     excel_export = None
 
+router = APIRouter()
 app = FastAPI(
     title="SmartLJK API",
     description="API Backend untuk Aplikasi SmartLJK - Pembuat LJK & Pemeriksa Jawaban Otomatis",
@@ -152,7 +153,7 @@ def serialize_list(records):
 # Health Check
 # ============================================================
 
-@app.get("/api/health")
+@router.get("/health")
 async def health_check():
     return {
         "status": "ok",
@@ -171,7 +172,7 @@ async def health_check():
 # Exam CRUD Endpoints
 # ============================================================
 
-@app.post("/api/exams")
+@router.post("/exams")
 async def create_exam(exam: ExamCreate):
     """Buat ujian baru beserta daftar soal"""
     try:
@@ -207,7 +208,7 @@ async def create_exam(exam: ExamCreate):
         raise HTTPException(status_code=500, detail=f"Gagal membuat ujian: {str(e)}")
 
 
-@app.get("/api/exams")
+@router.get("/exams")
 async def get_exams():
     """Daftar semua ujian"""
     try:
@@ -217,7 +218,7 @@ async def get_exams():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/exams/{exam_id}")
+@router.get("/exams/{exam_id}")
 async def get_exam(exam_id: int):
     """Detail ujian beserta daftar soal"""
     try:
@@ -234,7 +235,7 @@ async def get_exam(exam_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.put("/api/exams/{exam_id}")
+@router.put("/exams/{exam_id}")
 async def update_exam(exam_id: int, exam: ExamCreate):
     """Update ujian dan soal-soalnya"""
     try:
@@ -260,7 +261,7 @@ async def update_exam(exam_id: int, exam: ExamCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/api/exams/{exam_id}")
+@router.delete("/exams/{exam_id}")
 async def delete_exam(exam_id: int):
     """Hapus ujian (cascade ke questions, results, answers)"""
     try:
@@ -278,8 +279,8 @@ async def delete_exam(exam_id: int):
 # LJK PDF Generation
 # ============================================================
 
-@app.get("/api/generate-ljk/{exam_id}")
-@app.post("/api/generate-ljk/{exam_id}")
+@router.get("/generate-ljk/{exam_id}")
+@router.post("/generate-ljk/{exam_id}")
 async def generate_ljk(exam_id: int):
     """Generate PDF LJK untuk sebuah ujian"""
     if not pdf_generator:
@@ -312,7 +313,7 @@ async def generate_ljk(exam_id: int):
 # OMR Scan Processing
 # ============================================================
 
-@app.post("/api/scan")
+@router.post("/scan")
 async def scan_image(
     file: UploadFile = File(...),
     exam_id: int = Form(...),
@@ -410,7 +411,7 @@ async def scan_image(
         raise HTTPException(status_code=500, detail=f"Gagal memproses scan: {str(e)}")
 
 
-@app.post("/api/scan-pdf")
+@router.post("/scan-pdf")
 async def scan_pdf(
     file: UploadFile = File(...),
     exam_id: int = Form(...)
@@ -460,7 +461,7 @@ async def scan_pdf(
         raise HTTPException(status_code=500, detail=f"Gagal memproses PDF: {str(e)}")
 
 
-@app.post("/api/scan-demo")
+@router.post("/scan-demo")
 async def scan_demo(exam_id: int = Form(None)):
     """Demo scan dengan data simulasi"""
     try:
@@ -515,7 +516,7 @@ async def scan_demo(exam_id: int = Form(None)):
 # Results & Dashboard
 # ============================================================
 
-@app.get("/api/results/{exam_id}")
+@router.get("/results/{exam_id}")
 async def get_results(exam_id: int):
     """Daftar hasil ujian untuk exam tertentu"""
     try:
@@ -525,7 +526,7 @@ async def get_results(exam_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/results/detail/{result_id}")
+@router.get("/results/detail/{result_id}")
 async def get_result_detail(result_id: int):
     """Detail hasil ujian siswa beserta jawaban per soal"""
     try:
@@ -542,7 +543,7 @@ async def get_result_detail(result_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/dashboard/{exam_id}")
+@router.get("/dashboard/{exam_id}")
 async def get_dashboard(exam_id: int):
     """Statistik dashboard untuk exam tertentu"""
     try:
@@ -557,7 +558,7 @@ async def get_dashboard(exam_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/question-analysis/{exam_id}")
+@router.get("/question-analysis/{exam_id}")
 async def get_question_analysis(exam_id: int):
     """Analisis butir soal untuk exam tertentu"""
     try:
@@ -571,7 +572,8 @@ async def get_question_analysis(exam_id: int):
 # Excel Export
 # ============================================================
 
-@app.get("/api/export/{exam_id}")
+@router.get("/export/{exam_id}")
+@router.get("/export-excel/{exam_id}")
 async def export_excel(exam_id: int):
     """Ekspor hasil ujian ke file Excel (.xlsx)"""
     if not excel_export:
@@ -611,7 +613,7 @@ async def export_excel(exam_id: int):
 # AI Question Generator
 # ============================================================
 
-@app.post("/api/generate-questions")
+@router.post("/generate-questions")
 async def generate_questions(req: GenerateQuestionsRequest):
     """Generate soal menggunakan Gemini AI"""
     if not ai_grader:
@@ -637,7 +639,7 @@ class DocxDownloadRequest(BaseModel):
     content: Optional[str] = None
     title: Optional[str] = "Asesmen_Lengkap"
 
-@app.post("/api/download-docx")
+@router.post("/download-docx")
 async def download_docx(req: DocxDownloadRequest):
     """Download hasil asesmen sebagai file .docx"""
     raw_text = req.text or req.content or ""
@@ -900,3 +902,14 @@ def _grade_all_answers(scan_result, questions):
         'total_score': round(total_score, 2),
         'details': details
     }
+
+
+# ============================================================
+# Mount Router to both / and /api for seamless Vercel routing
+# ============================================================
+app.include_router(router)
+app.include_router(router, prefix="/api")
+
+@app.get("/")
+async def root_index():
+    return {"status": "ok", "app": "SmartLJK AI API", "version": "1.0.0"}

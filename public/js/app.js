@@ -1180,10 +1180,30 @@ async function loadExamsDropdowns() {
 }
 
 // ============================================================
+// 5. THEME MANAGER (5 TEMA SUPER MEWAH & EMAS CERAH)
+// ============================================================
+function initTheme() {
+    const savedTheme = localStorage.getItem('smartljk_theme') || 'theme-royal-blue';
+    document.body.className = savedTheme;
+    const themeSelect = document.getElementById('themeSelect');
+    if (themeSelect) {
+        themeSelect.value = savedTheme;
+        themeSelect.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            document.body.className = newTheme;
+            localStorage.setItem('smartljk_theme', newTheme);
+            const themeName = e.target.options[e.target.selectedIndex].text;
+            showNotification(`Tema berhasil diubah: ${themeName}`, 'info');
+        });
+    }
+}
+
+// ============================================================
 // INITIALIZATION ON DOM READY
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     handleRouting();
     initBeranda();
     initScan();
