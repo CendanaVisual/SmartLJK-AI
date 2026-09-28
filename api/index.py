@@ -97,10 +97,29 @@ class ExamCreate(BaseModel):
 
 
 class GenerateQuestionsRequest(BaseModel):
-    topic: str
-    target_class: str
-    difficulty: str
-    count: int = 5
+    mata_pelajaran: Optional[str] = ""
+    jenjang: Optional[str] = ""
+    kelas: Optional[str] = ""
+    fase: Optional[str] = ""
+    sekolah: Optional[str] = ""
+    kepala_sekolah: Optional[str] = ""
+    guru: Optional[str] = ""
+    nip_kepala: Optional[str] = ""
+    nip_guru: Optional[str] = ""
+    lingkup_materi: Optional[str] = ""
+    tujuan_pembelajaran: Optional[str] = ""
+    indikator_soal: Optional[str] = ""
+    jenis_taksonomi: Optional[str] = ""
+    tingkat_kognitif: Optional[str] = ""
+    jumlah_opsi: Optional[str] = ""
+    bentuk_soal: Optional[str] = ""
+    jumlah_soal: Optional[str] = "5"
+    
+    # Old fields for backward compatibility
+    topic: Optional[str] = ""
+    target_class: Optional[str] = ""
+    difficulty: Optional[str] = ""
+    count: Optional[int] = 5
 
 
 # ============================================================
@@ -597,9 +616,8 @@ async def generate_questions(req: GenerateQuestionsRequest):
     if not ai_grader:
         raise HTTPException(status_code=501, detail="Modul AI belum tersedia")
     try:
-        result_text = ai_grader.generate_exam_questions(
-            req.topic, req.target_class, req.difficulty, req.count
-        )
+        req_dict = req.dict()
+        result_text = ai_grader.generate_exam_questions(**req_dict)
         if result_text:
             return {"questions": result_text, "status": "success"}
         else:
@@ -608,6 +626,50 @@ async def generate_questions(req: GenerateQuestionsRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal generate soal: {str(e)}")
+
+class DocxDownloadRequest(BaseModel):
+    text: str
+
+@app.post("/api/download-docx")
+async def download_docx(req: DocxDownloadRequest):
+    """Download hasil asesmen sebagai file .docx"""
+    try:
+        from docx import Document
+        from docx.shared import Pt
+    except ImportError:
+        raise HTTPException(status_code=501, detail="python-docx belum terinstal")
+        
+    doc = Document()
+    
+    # Simple markdown to text processing
+    # Can enhance later with full markdown-to-docx converter if needed.
+    # For now, just split by newlines and handle some basic formatting.
+    for line in req.text.split('\n'):
+        line_clean = line.strip()
+        if line_clean.startswith('# '):
+            p = doc.add_heading(line_clean[2:], level=1)
+        elif line_clean.startswith('## '):
+            p = doc.add_heading(line_clean[3:], level=2)
+        elif line_clean.startswith('### '):
+            p = doc.add_heading(line_clean[4:], level=3)
+        elif line_clean.startswith('**') and line_clean.endswith('**'):
+            p = doc.add_paragraph()
+            run = p.add_run(line_clean[2:-2])
+            run.bold = True
+        else:
+            doc.add_paragraph(line)
+            
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={
+            "Content-Disposition": "attachment; filename=Asesmen_Lengkap.docx"
+        }
+    )
 
 
 # ============================================================

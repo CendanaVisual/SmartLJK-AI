@@ -224,55 +224,53 @@ window.removeQuestion = removeQuestion;
 window.showStudentDetail = showStudentDetail;
 
 function updatePreview() {
-    const title = document.getElementById('judulUjian').value || 'Judul Ujian';
-    const mapel = document.getElementById('mataPelajaran').value || 'Mata Pelajaran';
-    const kelas = document.getElementById('kelas').value || 'Kelas';
+    document.getElementById('prevInstansi').innerText = document.getElementById('examInstansi')?.value || 'DINAS PENDIDIKAN';
+    document.getElementById('prevTitle').innerText = document.getElementById('examTitle')?.value || 'Ujian...';
+    document.getElementById('prevCode').innerText = document.getElementById('examCode')?.value || 'KODE-01';
+    document.getElementById('prevSubject').innerText = document.getElementById('examSubject')?.value || 'Mata Pelajaran';
+    document.getElementById('prevClass').innerText = document.getElementById('examClass')?.value || 'Kelas';
+    document.getElementById('prevKKM').innerText = document.getElementById('examKKM')?.value || '75';
 
-    document.getElementById('previewJudul').textContent = title;
-    document.getElementById('previewDetail').textContent = `${mapel} - ${kelas}`;
+    const qrBox = document.getElementById('qrcode');
+    if(qrBox) {
+        qrBox.innerHTML = '';
+        try {
+            new QRCode(qrBox, { text: document.getElementById('examCode')?.value || 'test', width: 35, height: 35, colorDark: '#000', colorLight: '#fff' });
+        } catch(e){}
+    }
 
-    // QR Code
-    const qrContainer = document.getElementById('previewQr');
-    qrContainer.innerHTML = '';
-    try {
-        new QRCode(qrContainer, {
-            text: JSON.stringify({
-                code: document.getElementById('kodeUjian').value || 'EXAM-001',
-                title: title.substring(0, 30),
-                total: questions.length
-            }),
-            width: 64, height: 64,
-            colorDark: "#000000", colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    } catch (e) { /* QRCode library belum dimuat */ }
+    const ng1 = document.getElementById('nameGrid1');
+    const ng2 = document.getElementById('nameGrid2');
+    if(ng1 && ng2) {
+        ng1.innerHTML = ''; ng2.innerHTML = '';
+        for(let i=0; i<20; i++) ng1.innerHTML += '<div class="char-box"></div>';
+        for(let i=0; i<20; i++) ng2.innerHTML += '<div class="char-box"></div>';
+    }
 
-    // Render preview soal
-    const ansContainer = document.getElementById('previewAnswers');
-    ansContainer.innerHTML = '';
+    const qContainer = document.getElementById('previewQuestions');
+    if(!qContainer) return;
+    qContainer.innerHTML = '';
 
-    questions.forEach(q => {
-        const row = document.createElement('div');
-        row.className = 'preview-q-row';
+    questions.forEach((q, i) => {
+        const type = q.type;
+        let row = document.createElement('div');
+        row.className = 'ljk-q-row';
+        let contentHtml = '<div class="ljk-q-num">' + (i+1) + '.</div><div class="ljk-bubbles">';
 
-        let bubbles = '';
-        if (q.type === 'Pilihan Ganda') {
-            bubbles = ['A', 'B', 'C', 'D'].map(o => `<div class="bubble"><span>${o}</span></div>`).join('');
-        } else if (q.type === 'Pilihan Ganda Kompleks') {
-            bubbles = ['A', 'B', 'C', 'D'].map(o => `<div class="checkbox-option"><span>${o}</span></div>`).join('');
-        } else if (q.type === 'Benar/Salah') {
-            bubbles = `<div class="bubble"><span>B</span></div><div class="bubble" style="margin-left:12px"><span>S</span></div>`;
-        } else if (q.type === 'Menjodohkan') {
-            bubbles = `<div class="matching-preview">
-                <table class="matching-table"><thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
-                <tbody>${[1, 2, 3, 4].map(n => `<tr><td>${n}</td>${['A', 'B', 'C', 'D'].map(() => '<td><div class="bubble-sm"></div></td>').join('')}</tr>`).join('')}</tbody>
-                </table></div>`;
-        } else if (q.type === 'Isian Singkat') {
-            bubbles = `<div class="isian-box"></div>`;
+        if (type === 'Pilihan Ganda') {
+            ['A','B','C','D'].forEach(o => contentHtml += '<div class="ljk-bubble">'+o+'</div>');
+        } else if (type === 'Pilihan Ganda Kompleks') {
+            ['A','B','C','D'].forEach(o => contentHtml += '<div class="ljk-square">'+o+'</div>');
+        } else if (type === 'Benar/Salah') {
+            ['B','S'].forEach(o => contentHtml += '<div class="ljk-bubble">'+o+'</div>');
+        } else if (type === 'Isian Singkat') {
+            contentHtml += '<div class="ljk-isian"></div>';
+        } else if (type === 'Menjodohkan') {
+            contentHtml += '<div style="font-size: 8px;">[Grid Menjodohkan]</div>';
         }
-
-        row.innerHTML = `<div class="preview-q-num">${q.num}.</div><div class="preview-q-bubbles">${bubbles}</div>`;
-        ansContainer.appendChild(row);
+        contentHtml += '</div>';
+        row.innerHTML = contentHtml;
+        qContainer.appendChild(row);
     });
 }
 
@@ -829,118 +827,92 @@ async function exportExcel() {
 // ============================================================
 
 function initGenerator() {
-    // Preset buttons
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-            document.getElementById('genTopik').value = e.target.textContent;
-        });
-    });
-
-    // Tab switching
-    document.querySelectorAll('#generator .tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('#generator .tab-btn').forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-        });
-    });
-
-    document.getElementById('generateBtn').addEventListener('click', generateQuestions);
-    document.getElementById('genCopyBtn').addEventListener('click', () => {
-        const text = document.getElementById('genOutput').value;
-        if (!text) return showNotification('Tidak ada teks untuk disalin', 'warning');
-        navigator.clipboard.writeText(text);
-        showNotification('Teks berhasil disalin ke clipboard!', 'success');
-    });
-    document.getElementById('genDownloadBtn').addEventListener('click', () => {
-        const text = document.getElementById('genOutput').value;
-        if (!text) return showNotification('Tidak ada teks untuk diunduh', 'warning');
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Soal_${document.getElementById('genTopik').value || 'Generated'}.txt`;
-        a.click();
-        showNotification('File TXT berhasil diunduh!', 'success');
-    });
-    document.getElementById('genImportBtn').addEventListener('click', importToLJK);
-}
-
-async function generateQuestions() {
-    const topik = document.getElementById('genTopik').value;
-    if (!topik) return showNotification('Isi topik terlebih dahulu', 'warning');
-
-    const kelas = document.getElementById('genKelas').value;
-    const bloomChecks = document.querySelectorAll('.gen-bloom:checked');
-    const difficulty = Array.from(bloomChecks).map(c => c.value).join(', ') || 'C1-C3 Campuran';
-    const count = parseInt(document.getElementById('genJumlah').value) || 5;
-
-    const btnText = document.getElementById('genBtnText');
-    const spinner = document.getElementById('genSpinner');
-    const btn = document.getElementById('generateBtn');
-
-    btnText.textContent = 'Memproses AI...';
-    spinner.classList.remove('hidden');
-    btn.disabled = true;
-
-    try {
-        const res = await apiCall('/generate-questions', 'POST', {
-            topic: topik,
-            target_class: kelas,
-            difficulty: difficulty,
-            count: count
-        });
-
-        if (res.questions) {
-            document.getElementById('genOutput').value = res.questions;
-            showNotification('Soal berhasil di-generate oleh AI!', 'success');
-        }
-    } catch (e) {
-        showNotification(`Gagal generate: ${e.message}`, 'error');
-        // Fallback demo
-        document.getElementById('genOutput').value = `[Demo] Soal ${topik}\n\nGagal terhubung ke API AI.\nPastikan backend berjalan dan API key Gemini valid.`;
-    } finally {
-        btnText.innerHTML = '<i class="fas fa-magic"></i> Generate Soal';
-        spinner.classList.add('hidden');
-        btn.disabled = false;
-    }
-}
-
-function importToLJK() {
-    const text = document.getElementById('genOutput').value;
-    if (!text) return showNotification('Generate soal terlebih dahulu', 'warning');
-
-    // Parse sederhana: cari pola nomor soal
-    const lines = text.split('\n');
-    let importCount = 0;
-
-    lines.forEach(line => {
-        const match = line.match(/^(\d+)\.\s+(.+)/);
-        if (match && !line.match(/^[A-E]\./)) {
-            const num = parseInt(match[1]);
-            const questionText = match[2].trim();
-
-            // Deteksi tipe soal
-            let type = 'Pilihan Ganda';
-            if (line.toLowerCase().includes('benar') && line.toLowerCase().includes('salah')) {
-                type = 'Benar/Salah';
-            } else if (line.toLowerCase().includes('isian') || line.toLowerCase().includes('jawab singkat')) {
-                type = 'Isian Singkat';
+    const btnGen = document.getElementById('btnGenerateFull');
+    if (btnGen) {
+        btnGen.addEventListener('click', async () => {
+            const out = document.getElementById('genOutputFull');
+            out.value = 'Menganalisis permintaan dan menghubungi AI Gemini...\nMohon tunggu sekitar 10-20 detik...';
+            btnGen.disabled = true;
+            btnGen.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memproses...';
+            
+            const payload = {
+                topic: document.getElementById('genMapel')?.value || 'Umum',
+                target_class: (document.getElementById('genJenjang')?.value || '') + ' Kelas ' + (document.getElementById('genKelasInput')?.value || '') + ' - ' + (document.getElementById('genFase')?.value || ''),
+                difficulty: document.getElementById('genKesulitan')?.value || 'Sedang',
+                count: parseInt(document.getElementById('genJumlahFull')?.value) || 10,
+                mata_pelajaran: document.getElementById('genMapel')?.value,
+                jenjang: document.getElementById('genJenjang')?.value,
+                kelas: document.getElementById('genKelasInput')?.value,
+                fase: document.getElementById('genFase')?.value,
+                sekolah: document.getElementById('genSekolah')?.value,
+                kota: document.getElementById('genKota')?.value,
+                kepala_sekolah: document.getElementById('genKepsek')?.value,
+                guru: document.getElementById('genGuru')?.value,
+                nip_kepala: document.getElementById('genNipKepsek')?.value,
+                nip_guru: document.getElementById('genNipGuru')?.value,
+                lingkup_materi: document.getElementById('genMateri')?.value,
+                indikator_soal: document.getElementById('genIndikator')?.value,
+                jenis_taksonomi: document.getElementById('genTaksonomi')?.value,
+                tingkat_kognitif: document.getElementById('genKognitif')?.value,
+                jumlah_opsi: document.getElementById('genOpsi')?.value,
+                bentuk_soal: document.getElementById('genBentuk')?.value,
+                jumlah_soal: document.getElementById('genJumlahFull')?.value
+            };
+            
+            try {
+                const res = await apiCall('/generate-questions', 'POST', payload);
+                if (res.error) {
+                    out.value = 'Error: ' + res.error;
+                    showNotification('Gagal generate soal', 'error');
+                } else {
+                    out.value = res.generated_questions || res;
+                    showNotification('Generate berhasil!', 'success');
+                }
+            } catch(e) {
+                out.value = 'Error koneksi ke API: ' + e.message;
+                showNotification('Terjadi kesalahan jaringan', 'error');
             }
+            btnGen.disabled = false;
+            btnGen.innerHTML = '<i class="fas fa-magic"></i> Generate Asesmen Lengkap AI';
+        });
+    }
 
-            addQuestion(type);
-            const lastQ = questions[questions.length - 1];
-            lastQ.text = questionText;
-            importCount++;
-        }
+    document.getElementById('btnSalin')?.addEventListener('click', () => {
+        const txt = document.getElementById('genOutputFull').value;
+        if(!txt) return;
+        navigator.clipboard.writeText(txt).then(() => showNotification('Disalin ke clipboard!', 'success'));
     });
 
-    if (importCount > 0) {
-        renderQuestionsList();
-        updatePreview();
-        window.location.hash = 'beranda';
-        showNotification(`${importCount} soal berhasil diimpor ke LJK Builder!`, 'success');
-    } else {
-        showNotification('Tidak ditemukan soal untuk diimpor dari teks', 'warning');
-    }
+    document.getElementById('btnUnduhDocx')?.addEventListener('click', async () => {
+        const text = document.getElementById('genOutputFull').value;
+        if(!text || text.includes('menunggu')) return showNotification('Tidak ada hasil untuk diunduh', 'error');
+        
+        showNotification('Membuat file Word...', 'info');
+        try {
+            const res = await fetch(API_BASE + '/download-docx', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    content: text, 
+                    title: 'Asesmen_' + (document.getElementById('genMapel')?.value || 'AI').replace(/\s+/g,'_')
+                })
+            });
+            
+            if (!res.ok) throw new Error('Gagal download');
+            
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Asesmen_' + (document.getElementById('genMapel')?.value || 'AI').replace(/\s+/g,'_') + '.docx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showNotification('Unduhan DOCX berhasil', 'success');
+        } catch (e) {
+            showNotification('Gagal mengunduh file DOCX: ' + e.message, 'error');
+        }
+    });
 }
 
 // ============================================================

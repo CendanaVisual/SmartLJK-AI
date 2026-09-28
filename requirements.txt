@@ -13,3 +13,4 @@ Pillow==10.1.0
 python-dotenv==1.0.0
 pydantic==2.5.2
 PyMuPDF==1.23.7
+python-docx>=0.8.11

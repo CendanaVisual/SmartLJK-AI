@@ -49,16 +49,11 @@ def generate_ljk_pdf(exam_data, questions):
 
     def draw_header():
         c.setFillColor(colors.black)
-        draw_top_down_centered_string(105, 15, "LEMBAR JAWABAN KOMPUTER (LJK)", font="Helvetica-Bold", size=14)
         
-        subtitle = f"{exam_data.get('title', '')} | {exam_data.get('subject', '')} | Kelas: {exam_data.get('class_name', '')}"
-        draw_top_down_centered_string(105, 22, subtitle, font="Helvetica", size=10)
-        
-        # Student Info
-        c.setLineWidth(1)
-        draw_top_down_string(25, 35, "Nama  : ___________________________", size=11)
-        draw_top_down_string(25, 45, "NIS   : ___________________________", size=11)
-        draw_top_down_string(25, 55, "Kelas : ___________________________", size=11)
+        # Header text
+        draw_top_down_string(25, 12, "DINAS PENDIDIKAN DAN KEBUDAYAAN", font="Helvetica", size=10)
+        draw_top_down_string(25, 17, "LEMBAR JAWABAN KOMPUTER (LJK) SMART AI", font="Helvetica-Bold", size=12)
+        draw_top_down_string(25, 22, exam_data.get('title', 'Ujian Sekolah'), font="Helvetica", size=10)
         
         # QR Code
         qr_data = {
@@ -71,23 +66,87 @@ def generate_ljk_pdf(exam_data, questions):
         qr.add_data(json.dumps(qr_data))
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
-        
-        # Save PIL image to bytes
         img_buffer = io.BytesIO()
         img.save(img_buffer, format="PNG")
         img_buffer.seek(0)
-        
-        # Draw QR code at top right
-        # X: 155mm, Y: 30mm, W: 30mm, H: 30mm
         from reportlab.lib.utils import ImageReader
         qr_img_reader = ImageReader(img_buffer)
-        c.drawImage(qr_img_reader, 155 * mm, height - 60 * mm, width=30 * mm, height=30 * mm)
+        
+        # Draw QR Code at top right
+        c.drawImage(qr_img_reader, 155 * mm, height - 30 * mm, width=20 * mm, height=20 * mm)
+        
+        # Exam Code below QR
+        draw_top_down_centered_string(165, 34, exam_data.get('code', 'NO-CODE'), font="Helvetica", size=8)
+        
+        # Horizontal Line
+        c.setLineWidth(1)
+        draw_top_down_line(25, 37, 185, 37)
+        
+        # Table-like metadata
+        meta_y = 42
+        draw_top_down_string(25, meta_y, "Mata Pelajaran", size=9)
+        draw_top_down_string(50, meta_y, f": {exam_data.get('subject', '')}", size=9)
+        draw_top_down_string(25, meta_y + 5, "Kelas / Semester", size=9)
+        draw_top_down_string(50, meta_y + 5, f": {exam_data.get('class_name', '')}", size=9)
+        
+        draw_top_down_string(110, meta_y, "Tahun Ajaran", size=9)
+        draw_top_down_string(135, meta_y, f": {exam_data.get('academic_year', '2024/2025')}", size=9)
+        draw_top_down_string(110, meta_y + 5, "KKM", size=9)
+        draw_top_down_string(135, meta_y + 5, f": {exam_data.get('passing_score', '75')}", size=9)
+
+        # Horizontal line
+        draw_top_down_line(25, 50, 185, 50)
+        
+        # Grid section
+        grid_y = 55
+        draw_top_down_string(25, grid_y, "NAMA LENGKAP SISWA (HURUF BALOK / KAPITAL):", font="Helvetica-Bold", size=8)
+        
+        # Name grid (2 rows, 20 cols)
+        box_w = 5
+        box_h = 6
+        for row in range(2):
+            for col in range(20):
+                c.setLineWidth(0.5)
+                draw_top_down_rect(25 + col * box_w, grid_y + 2 + row * box_h, box_w, box_h, fill=0, stroke=1)
+                
+        # Absen & Kelas grid
+        abs_x = 135
+        draw_top_down_string(abs_x, grid_y, "NOMOR ABSEN:", font="Helvetica-Bold", size=8)
+        for col in range(2):
+            draw_top_down_rect(abs_x + col * box_w, grid_y + 2, box_w, box_h, fill=0, stroke=1)
+            
+        draw_top_down_string(abs_x + 20, grid_y, "KELAS / ROMBEL:", font="Helvetica-Bold", size=8)
+        for col in range(3):
+            draw_top_down_rect(abs_x + 20 + col * box_w, grid_y + 2, box_w, box_h, fill=0, stroke=1)
+            
+        # Tanda Tangan
+        draw_top_down_string(abs_x, grid_y + 12, "Tanda Tangan Murid:", font="Helvetica", size=8)
+        draw_top_down_line(abs_x, grid_y + 25, abs_x + 40, grid_y + 25)
+
+        # Petunjuk Pengisian
+        petunjuk_y = 75
+        c.setDash(2, 2)
+        c.setLineWidth(0.5)
+        draw_top_down_rect(25, petunjuk_y, 160, 15, fill=0, stroke=1)
+        c.setDash() # reset
+        
+        draw_top_down_string(27, petunjuk_y + 4, "PETUNJUK PENGISIAN:", font="Helvetica-Bold", size=8)
+        draw_top_down_string(27, petunjuk_y + 8, "1. Gunakan pensil 2B untuk menghitamkan bulatan (O).", font="Helvetica", size=7)
+        draw_top_down_string(27, petunjuk_y + 12, "2. Hitamkan bulatan dengan penuh dan rapi. 3. Hapus bersih jika ingin memperbaiki.", font="Helvetica", size=7)
+
+        # Section header
+        sec_y = 95
+        c.setFillColor(colors.black)
+        draw_top_down_rect(25, sec_y, 160, 6, fill=1, stroke=0)
+        c.setFillColor(colors.white)
+        draw_top_down_centered_string(105, sec_y + 4.5, "LEMBAR JAWABAN SOAL", font="Helvetica-Bold", size=10)
+        c.setFillColor(colors.black)
 
     def draw_footer():
         c.setFillColor(colors.black)
         draw_top_down_centered_string(105, 290, "SmartLJK AI - Powered by Computer Vision & Gemini AI", font="Helvetica", size=8)
 
-    y_pos = 70
+    y_pos = 105
     x_pos_col1 = 25
     x_pos_col2 = 110
     
@@ -112,7 +171,7 @@ def generate_ljk_pdf(exam_data, questions):
             if current_col == 1 and q_type not in ["short_answer", "matching"]:
                 current_col = 2
                 current_x = x_pos_col2
-                y_pos = 70
+                y_pos = 105
             else:
                 c.showPage()
                 draw_anchors()
